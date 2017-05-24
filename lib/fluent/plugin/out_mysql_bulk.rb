@@ -33,6 +33,8 @@ DESC
                  :desc => "On duplicate key update column, comma separator."
     config_param :insert_ignore, :bool, default: false,
                  :desc => "Use INSERT IGNORE"
+    config_param :max_rows_per_insert, :integer, default: 0,
+                 :desc => "Maximum number of rows to insert in each statement"
 
     attr_accessor :handler
 
@@ -114,11 +116,14 @@ DESC
       chunk.msgpack_each do |tag, time, data|
         values << Mysql2::Client.pseudo_bind(values_template, data)
       end
-      sql = "INSERT #{@insert_ignore ? "IGNORE" : ""} INTO #{@table} (#{@column_names.join(',')}) VALUES #{values.join(',')}"
-      sql += @on_duplicate_key_update_sql if @on_duplicate_key_update
+      slice_size = @max_rows_per_insert > 0 ? @max_rows_per_insert : values.length
+      values.each_slice(slice_size) do |slice|
+        sql = "INSERT #{@insert_ignore ? "IGNORE" : ""} INTO #{@table} (#{@column_names.join(',')}) VALUES #{slice.join(',')}"
+        sql += @on_duplicate_key_update_sql if @on_duplicate_key_update
 
+        @handler.xquery(sql)
+      end
       log.info "bulk insert values size (table: #{@table}) => #{values.size}"
-      @handler.xquery(sql)
       @handler.close
     end
 
