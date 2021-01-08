@@ -15,8 +15,8 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
 
   gem.add_runtime_dependency "fluentd", '~> 0.12.0'
-  gem.add_runtime_dependency "mysql2-cs-bind"
-  gem.add_runtime_dependency "jsonpath"
+  gem.add_runtime_dependency "mysql2-cs-bind", '~> 0.1.0'
+  gem.add_runtime_dependency "jsonpath", '~> 1.0.0', '<= 1.0.5'
   gem.add_development_dependency "rake"
   gem.add_development_dependency "test-unit"
 end
